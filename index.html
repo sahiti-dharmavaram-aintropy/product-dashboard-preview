@@ -565,6 +565,31 @@ html, body { margin: 0; padding: 0; height: 100%; background: #f8fafc; }
 </head>
 <body>
 <div id="root"></div>
+<script>
+window.addEventListener('error', function(e) {
+  var root = document.getElementById('root');
+  if (root && !root.hasChildNodes()) {
+    root.innerHTML = '<div style="padding:40px;font-family:monospace;background:#fee2e2;color:#991b1b;min-height:100vh;">'
+      + '<h2 style="margin:0 0 12px;">Script error — preview failed to mount</h2>'
+      + '<div style="font-size:14px;">' + (e.message || 'unknown error') + '</div>'
+      + '<div style="font-size:12px;margin-top:8px;opacity:0.7;">' + (e.filename || '') + ':' + (e.lineno || '?') + '</div>'
+      + '</div>';
+  }
+});
+setTimeout(function() {
+  var root = document.getElementById('root');
+  if (root && !root.hasChildNodes()) {
+    root.innerHTML = '<div style="padding:40px;font-family:-apple-system,sans-serif;color:#475569;min-height:100vh;background:#f8fafc;">'
+      + '<h2 style="margin:0 0 12px;color:#0f172a;">Preview did not render</h2>'
+      + '<p>The page loaded but the React component never mounted. Possible causes:</p>'
+      + '<ul><li>Browser blocked an inline script (check extensions)</li>'
+      + '<li>JS execution disabled</li>'
+      + '<li>Network blocked the React bundle (which is inlined here, so unlikely)</li></ul>'
+      + '<p style="margin-top:16px;font-size:12px;color:#94a3b8;">Open DevTools (right-click → Inspect → Console) and reload to see the actual error.</p>'
+      + '</div>';
+  }
+}, 2000);
+</script>
 <script>/**
  * @license React
  * react.production.min.js
