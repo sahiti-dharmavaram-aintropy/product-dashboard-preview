@@ -1,4 +1,9 @@
-<title>Product Dashboard — Preview (Issue #918)</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product Dashboard — Preview</title>
 <style>
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -553,10 +558,12 @@
     .incorrect { background: #fee2e2; color: #dc2626; }
   
 
-/* Preview wrapper resets */
+/* Standalone resets */
 html, body { margin: 0; padding: 0; height: 100%; background: #f8fafc; }
 #root { min-height: 100vh; }
 </style>
+</head>
+<body>
 <div id="root"></div>
 <script>/**
  * @license React
@@ -2480,3 +2487,5 @@ function App() {
   }, React.createElement(PreviewBanner, null), React.createElement(KPIDashboard, null));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, null));</script>
+</body>
+</html>
