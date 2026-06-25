@@ -567,6 +567,23 @@
  * Data is anonymized: customer/dataset names → "Dataset A/B/C/D",
  * person names → role tags, issue titles → generic placeholders.
  */
+
+// Visible error overlay — if a React component throws, surface the actual
+// message instead of going blank. Helped find a real bug in fixture<->code
+// shape mismatch (kurious_pct vs system_pct).
+window.addEventListener('error', function(e) {
+  if (document.getElementById('__preview_err__')) return;
+  var box = document.createElement('div');
+  box.id = '__preview_err__';
+  box.style.cssText = 'position:fixed;top:60px;right:12px;max-width:420px;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:12px 14px;border-radius:8px;font:12px/1.4 -apple-system,monospace;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.2);';
+  box.innerHTML = '<div style="font-weight:700;margin-bottom:6px;">Preview error caught</div>'
+    + '<div>' + (e.message || 'unknown') + '</div>'
+    + '<div style="font-size:10px;opacity:0.7;margin-top:4px;">' + (e.filename || '').split('/').pop() + ':' + (e.lineno || '?') + '</div>'
+    + '<div style="font-size:10px;opacity:0.6;margin-top:6px;">Click to dismiss</div>';
+  box.onclick = () => box.remove();
+  document.body && document.body.appendChild(box);
+});
+
 (function() {
   const NOW = new Date('2026-06-24T12:00:00Z').getTime();
   const hAgo = h => new Date(NOW - h*3600*1000).toISOString();
@@ -599,10 +616,10 @@
       product_quality: {
         rag_accuracy_delta: {
           rows: [
-            { dataset: 'Dataset A Bronze (1,000q)', system_pct: 79.4, best_llm_pct: 76.1, delta_pct: 3.3 },
-            { dataset: 'Dataset A Golden (50q)',    system_pct: 81.9, best_llm_pct: 74.8, delta_pct: 7.1 },
-            { dataset: 'Dataset B Golden (50q)',    system_pct: 77.8, best_llm_pct: 81.5, delta_pct: -3.7 },
-            { dataset: 'Dataset B Bronze (928q)',   system_pct: 85.5, best_llm_pct: 85.6, delta_pct: -0.1 },
+            { dataset: 'Dataset A Bronze (1,000q)', kurious_pct: 79.4, best_llm_pct: 76.1, delta_pct: 3.3 },
+            { dataset: 'Dataset A Golden (50q)',    kurious_pct: 81.9, best_llm_pct: 74.8, delta_pct: 7.1 },
+            { dataset: 'Dataset B Golden (50q)',    kurious_pct: 77.8, best_llm_pct: 81.5, delta_pct: -3.7 },
+            { dataset: 'Dataset B Bronze (928q)',   kurious_pct: 85.5, best_llm_pct: 85.6, delta_pct: -0.1 },
           ],
           source: 'huggingface.co/spaces/example-org/leaderboard-v1',
           available: true,
