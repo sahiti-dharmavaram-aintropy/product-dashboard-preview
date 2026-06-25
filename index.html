@@ -435,6 +435,61 @@
     .tile.tile-unavailable:hover { border-color: #e2e8f0; box-shadow: none; }
     .tile.tile-stale { border-color: #fbbf24; background: #fffdf5; }
     .tile.tile-stale .tile-label { color: #b45309; }
+
+    /* Status colors — driven by target vs value */
+    .tile.tile-on-target  { border-top: 3px solid #22c55e; }
+    .tile.tile-near       { border-top: 3px solid #f59e0b; }
+    .tile.tile-off-target { border-top: 3px solid #ef4444; }
+    .tile.ns-tile.tile-on-target  { border-top: 3px solid #22c55e; }
+    .tile.ns-tile.tile-near       { border-top: 3px solid #f59e0b; }
+    .tile.ns-tile.tile-off-target { border-top: 3px solid #ef4444; }
+
+    .tile-target { font-size: 11px; color: #94a3b8; font-weight: 400;
+                   display: inline-flex; align-items: center; gap: 4px; }
+    .tile-target b { color: #475569; font-weight: 500; }
+    .tile-value-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .tile-delta { font-size: 12px; font-weight: 600; display: inline-flex;
+                  align-items: center; gap: 2px; padding: 2px 6px; border-radius: 6px;
+                  font-variant-numeric: tabular-nums; }
+    .tile-delta-up   { color: #15803d; background: #dcfce7; }
+    .tile-delta-down { color: #b91c1c; background: #fee2e2; }
+    .tile-delta-flat { color: #64748b; background: #f1f5f9; }
+    .ns-tile .tile-delta-up   { background: rgba(34,197,94,0.15);  color: #4ade80; }
+    .ns-tile .tile-delta-down { background: rgba(239,68,68,0.15);  color: #f87171; }
+    .ns-tile .tile-delta-flat { background: rgba(148,163,184,0.15);color: #94a3b8; }
+
+    /* North-Star composite breakdown */
+    .ns-components { display: flex; gap: 18px; margin-top: 14px; flex-wrap: wrap;
+                     padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .ns-component { display: flex; flex-direction: column; gap: 2px; }
+    .ns-component-name { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ns-component-value { font-size: 18px; color: #cbd5e1; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .ns-component-weight { font-size: 10px; color: #475569; }
+    .ns-definition { font-size: 12px; color: #94a3b8; margin-top: 4px; font-weight: 400; }
+
+    /* Pipeline flow — replaces the 8-tile dump */
+    .pipeline-flow { background: white; border: 1px solid #f1f5f9; border-radius: 12px;
+                     padding: 22px 24px; display: flex; align-items: stretch; gap: 0;
+                     overflow-x: auto; }
+    .pipeline-stage { display: flex; flex-direction: column; gap: 6px; padding: 0 14px;
+                      cursor: pointer; transition: opacity 0.15s; min-width: 100px;
+                      border-radius: 6px; }
+    .pipeline-stage:hover { background: #f8fafc; }
+    .pipeline-stage:first-child { padding-left: 4px; }
+    .pipeline-stage:last-child  { padding-right: 4px; }
+    .pipeline-stage-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .pipeline-stage-dot.green  { background: #22c55e; }
+    .pipeline-stage-dot.amber  { background: #f59e0b; }
+    .pipeline-stage-dot.red    { background: #ef4444; }
+    .pipeline-stage-dot.muted  { background: #cbd5e1; }
+    .pipeline-stage-row { display: flex; align-items: center; gap: 6px; }
+    .pipeline-stage-name { font-size: 11px; color: #475569; font-weight: 500;
+                            text-transform: uppercase; letter-spacing: 0.4px; }
+    .pipeline-stage-value { font-size: 18px; font-weight: 700; color: #0f172a;
+                             font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+    .pipeline-stage-meta { font-size: 10px; color: #94a3b8; }
+    .pipeline-arrow { display: flex; align-items: center; color: #cbd5e1;
+                      font-size: 18px; user-select: none; flex-shrink: 0; padding-top: 18px; }
     .tile-label { font-size: 11px; font-weight: 500; text-transform: none;
                   letter-spacing: 0; color: #64748b; }
     .tile-value { font-size: 32px; font-weight: 700; color: #0f172a; line-height: 1;
@@ -642,16 +697,18 @@ window.addEventListener('error', function(e) {
     },
     build: {
       north_star: {
-        tts: { value: 78.4, p50_min: null, unit: '/100', n_solutions: 4,
-               last_first_query_at: hAgo(3),
-               is_stale: false, available: true,
-               source: 'composite of accuracy + latency + index build time',
-               components: {
-                 accuracy: { value: 61.4, weight: 0.5, score: 61.4 },
-                 latency: { value: 4250, weight: 0.3, score: 87.5 },  // 100 - (4250/10000)*100 inverted; just a label
-                 index_build: { value: 12.3, weight: 0.2, score: 87.7 },  // similar normalization
-               }
-             }
+        tts: {
+          value: 78.4, unit: '/100', target: 85, delta_vs_prev: 3.2, prev_sprint: 14,
+          is_stale: false, available: true, direction: 'higher_is_better',
+          definition: 'Composite product-health score · accuracy · latency · index build time',
+          source: 'composite of accuracy + latency + index build time',
+          last_first_query_at: hAgo(3), n_solutions: 4, p50_min: null,
+          components: [
+            { name: 'Accuracy',         value: 61.4, unit: '%',     weight: 0.5, score: 61.4 },
+            { name: 'Answer Latency',   value: 4250, unit: 'ms',    weight: 0.3, score: 87.5 },
+            { name: 'Index Build Time', value: 12.3, unit: 'min/1M',weight: 0.2, score: 87.7 },
+          ],
+        },
       },
       product_quality: {
         rag_accuracy_delta: {
@@ -666,12 +723,15 @@ window.addEventListener('error', function(e) {
           note: 'Manual update — refresh when new HF runs are submitted',
         },
         solutions_accuracy: { value: 61.4, unit: '%', n_sessions: 7,
+                              target: 75, delta_vs_prev: 2.1, direction: 'higher_is_better',
                               last_session_at: hAgo(30), is_stale: false, available: true,
                               source: 'leaderboard.portal_ui_test_session' },
         answer_latency_p95: { value: 4250, unit: 'ms', n_queries: 4254,
+                              target: 3000, delta_vs_prev: -180, direction: 'lower_is_better',
                               last_query_at: hAgo(0.3), is_stale: false, available: true,
                               source: 'leaderboard.query_latency' },
         retrieval_latency_p95: { value: 124.5, unit: 'ms', n_datasets: 3,
+                                 target: 200, delta_vs_prev: -8.2, direction: 'lower_is_better',
                                  last_measured_at: hAgo(14), is_stale: false, available: true,
                                  source: 'leaderboard.benchmark_retrieval_results · qdrant_dense' },
         index_build_time: {
@@ -679,33 +739,42 @@ window.addEventListener('error', function(e) {
             Qdrant:     { value: 12.3, n_runs: 5, last_run_at: hAgo(40) },
             OpenSearch: { value: 18.1, n_runs: 4, last_run_at: hAgo(55) },
           },
+          value: 12.3, target: 15, delta_vs_prev: -0.4, direction: 'lower_is_better',
           unit: 'min/1M docs', last_run_at: hAgo(40), is_stale: true, available: true,
           source: 'leaderboard.indexing · indexing_type=Batch',
         },
         pipeline_health: {
-          crawling_speed:    { value: 142.3, unit: 'pages/min', n_runs: 8,  last_run_at: hAgo(4),
+          crawling_speed:    { stage: 'Crawl',    short_value: '142/min', target: 100,  delta_vs_prev: 8.4,  direction: 'higher_is_better',
+                                value: 142.3, unit: 'pages/min', n_runs: 8,  last_run_at: hAgo(4),
                                 total_pages: 487500, is_stale: false, available: true,
                                 source: 'leaderboard.crawling' },
-          extraction_success:{ value: 94.6, unit: '%', n_runs: 12, last_run_at: hAgo(8),
+          extraction_success:{ stage: 'Extract',  short_value: '94.6%',   target: 95,   delta_vs_prev: 1.1,  direction: 'higher_is_better',
+                                value: 94.6, unit: '%', n_runs: 12, last_run_at: hAgo(8),
                                 avg_time_min: 22.4, is_stale: false, available: true,
                                 source: 'leaderboard.extraction_pipeline' },
-          chunking_volume:   { value: 1847200, unit: 'chunks', n_runs: 14, last_run_at: hAgo(6),
+          chunking_volume:   { stage: 'Chunk',    short_value: '1.8M',    target: null, delta_vs_prev: null, direction: 'higher_is_better',
+                                value: 1847200, unit: 'chunks', n_runs: 14, last_run_at: hAgo(6),
                                 avg_chunk_size: 512, is_stale: false, available: true,
                                 source: 'leaderboard.chunking' },
-          metadata_accuracy: { value: 91.3, unit: '%', n_runs: 9, last_run_at: hAgo(12),
+          metadata_accuracy: { stage: 'Metadata', short_value: '91.3%',   target: 90,   delta_vs_prev: 0.8,  direction: 'higher_is_better',
+                                value: 91.3, unit: '%', n_runs: 9, last_run_at: hAgo(12),
                                 fields_generated: 156900, is_stale: false, available: true,
                                 source: 'leaderboard.metadata_generation' },
-          rag_throughput:    { value: 8.4, unit: 'q/sec', n_runs: 22, last_run_at: hAgo(2),
+          rag_throughput:    { stage: 'RAG',      short_value: '8.4 q/s', target: 5,    delta_vs_prev: 0.6,  direction: 'higher_is_better',
+                                value: 8.4, unit: 'q/sec', n_runs: 22, last_run_at: hAgo(2),
                                 total_queries: 14280, is_stale: false, available: true,
                                 source: 'leaderboard.rag_pipeline' },
-          data_ingested:     { value: 247.8, unit: 'GB', n_sources: 31, last_added_at: hAgo(9),
+          data_ingested:     { stage: 'Ingest',   short_value: '248 GB',  target: null, delta_vs_prev: null, direction: 'higher_is_better',
+                                value: 247.8, unit: 'GB', n_sources: 31, last_added_at: hAgo(9),
                                 is_stale: false, available: true,
                                 source: 'leaderboard.data_source' },
-          experiment_runs:   { value: 47, unit: 'runs', n_categories: 4, last_run_at: hAgo(3),
+          experiment_runs:   { stage: 'Experiments', short_value: '47',   target: null, delta_vs_prev: null, direction: 'higher_is_better',
+                                value: 47, unit: 'runs', n_categories: 4, last_run_at: hAgo(3),
                                 accuracy_runs: 18, latency_runs: 14, ingest_runs: 9, index_runs: 6,
                                 is_stale: false, available: true,
                                 source: 'leaderboard.experiment_run' },
-          website_ui_pass:   { value: 88.2, unit: '%', n_sessions: 6, last_run_at: hAgo(18),
+          website_ui_pass:   { stage: 'UI Tests', short_value: '88.2%',   target: 85,   delta_vs_prev: -0.8, direction: 'higher_is_better',
+                                value: 88.2, unit: '%', n_sessions: 6, last_run_at: hAgo(18),
                                 is_stale: false, available: true,
                                 source: 'leaderboard.website_ui_test_run' },
         },
@@ -1312,12 +1381,47 @@ function fmtNum(v, opts = {}) {
   return unit ? <>{s}<span className="tile-unit">{unit}</span></> : s;
 }
 
-function Tile({ label, value, unit, sub, meta, isStale, isUnavailable, blocker, onClick, decimals = 1, large = false, locale = true, sourceHref }) {
+/* Compute green/amber/red status from value vs target. Direction tells us
+ * whether higher or lower is better. Near = within 80% of target. */
+function tileStatus(value, target, direction) {
+  if (value == null || target == null) return null;
+  if (direction === 'lower_is_better') {
+    if (value <= target) return 'on-target';
+    if (value <= target * 1.25) return 'near';
+    return 'off-target';
+  }
+  // higher_is_better
+  if (value >= target) return 'on-target';
+  if (value >= target * 0.8) return 'near';
+  return 'off-target';
+}
+
+function Delta({ value, direction = 'higher_is_better', unit }) {
+  if (value == null) return null;
+  // For "lower is better" metrics, a negative number means improvement.
+  const goodIsPositive = direction !== 'lower_is_better';
+  const isGood = goodIsPositive ? value > 0 : value < 0;
+  const isBad  = goodIsPositive ? value < 0 : value > 0;
+  const cls = value === 0 ? 'tile-delta tile-delta-flat'
+            : isGood        ? 'tile-delta tile-delta-up'
+            :                  'tile-delta tile-delta-down';
+  const arrow = value === 0 ? '·' : (value > 0 ? '↑' : '↓');
+  const absVal = Math.abs(value);
+  const formatted = absVal >= 100 ? Math.round(absVal).toLocaleString()
+                   : absVal.toFixed(1);
+  return <span className={cls}>{arrow} {formatted}{unit || ''}</span>;
+}
+
+function Tile({ label, value, unit, sub, meta, isStale, isUnavailable, blocker, onClick,
+                decimals = 1, large = false, locale = true, sourceHref,
+                target, delta, direction, prevSprint, breakdown }) {
+  const status = tileStatus(value, target, direction);
   const cls = [
     'tile',
     large ? 'ns-tile' : '',
     isUnavailable ? 'tile-unavailable' : '',
     isStale ? 'tile-stale' : '',
+    status ? `tile-${status}` : '',
   ].filter(Boolean).join(' ');
 
   const displayValue = isUnavailable
@@ -1335,11 +1439,28 @@ function Tile({ label, value, unit, sub, meta, isStale, isUnavailable, blocker, 
            onClick={e => e.stopPropagation()} title="View source on GitHub">↗</a>
       )}
       <div className="tile-label">{label}</div>
-      <div>
-        <span className="tile-value">{displayValue}</span>
-        {unit && !isUnavailable && <span className="tile-unit">{unit}</span>}
+      <div className="tile-value-row">
+        <span><span className="tile-value">{displayValue}</span>
+        {unit && !isUnavailable && <span className="tile-unit">{unit}</span>}</span>
+        {!isUnavailable && delta != null && (
+          <Delta value={delta} direction={direction} unit={unit && unit.startsWith('%') ? unit : ''} />
+        )}
       </div>
+      {!isUnavailable && target != null && (
+        <div className="tile-target">target <b>{target}{unit || ''}</b>{prevSprint != null ? ` · vs Sprint ${prevSprint}` : ''}</div>
+      )}
       {sub && !isUnavailable && <div className="tile-sub">{sub}</div>}
+      {breakdown && !isUnavailable && (
+        <div className="ns-components">
+          {breakdown.map(c => (
+            <div className="ns-component" key={c.name}>
+              <div className="ns-component-name">{c.name}</div>
+              <div className="ns-component-value">{c.value}{c.unit || ''}</div>
+              <div className="ns-component-weight">weight {Math.round((c.weight || 0) * 100)}%</div>
+            </div>
+          ))}
+        </div>
+      )}
       {blocker && isUnavailable && <div className="tile-blocker">{blocker}</div>}
       {!isUnavailable && (isStale || meta) && (
         <div className="tile-meta">
@@ -1512,6 +1633,59 @@ function TileDetailModal({ title, tableName, aggregate, datasetId, onClose }) {
   );
 }
 
+function PipelineFlow({ ph, openDetail }) {
+  // Canonical pipeline order
+  const stages = [
+    { key: 'crawling_speed',     label: 'Crawl' },
+    { key: 'data_ingested',      label: 'Ingest' },
+    { key: 'extraction_success', label: 'Extract' },
+    { key: 'chunking_volume',    label: 'Chunk' },
+    { key: 'metadata_accuracy', label: 'Metadata' },
+    { key: 'rag_throughput',     label: 'RAG' },
+    { key: 'experiment_runs',    label: 'Experiments' },
+    { key: 'website_ui_pass',    label: 'UI Tests' },
+  ];
+
+  function statusFor(tile) {
+    if (!tile) return 'muted';
+    if (!tile.available) return 'muted';
+    if (tile.is_stale) return 'amber';
+    const s = tileStatus(tile.value, tile.target, tile.direction);
+    if (s === 'on-target') return 'green';
+    if (s === 'near') return 'amber';
+    if (s === 'off-target') return 'red';
+    return 'green';  // no target = treat as healthy by default
+  }
+
+  return (
+    <div className="pipeline-flow">
+      {stages.map((s, i) => {
+        const tile = ph[s.key];
+        if (!tile) return null;
+        const status = statusFor(tile);
+        const short = tile.short_value || (tile.value != null ? String(tile.value) : '—');
+        return (
+          <React.Fragment key={s.key}>
+            <div className="pipeline-stage" onClick={() => openDetail(s.key, tile)} title="Click for underlying rows">
+              <div className="pipeline-stage-row">
+                <span className={'pipeline-stage-dot ' + status} />
+                <span className="pipeline-stage-name">{s.label}</span>
+              </div>
+              <div className="pipeline-stage-value">{short}</div>
+              <div className="pipeline-stage-meta">
+                {tile.last_run_at || tile.last_added_at
+                  ? `${fmtAgo(tile.last_run_at || tile.last_added_at)}`
+                  : '—'}
+              </div>
+            </div>
+            {i < stages.length - 1 && <div className="pipeline-arrow">→</div>}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
 function KPIDashboard() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1624,22 +1798,6 @@ function KPIDashboard() {
           <div className="sprint-badge-progress"><div className="sprint-badge-progress-fill" style={{width: sprintProgressPct + '%'}} /></div>
           <div className="sprint-badge-progress-label">Day {sprintElapsedDays} of {sprintDayCount} · {sprintProgressPct}% elapsed</div>
         </div>
-        {velocity.available && (
-          <div className="sprint-stats">
-            <span className="dash-sprint-stat" onClick={() => setModal({title: 'Engineering — Sprint issues', slice: 'engineering'})}>
-              Engineering <strong>{velocity.engineering.done}/{velocity.engineering.total}</strong>
-              <span className="pct">{velocity.engineering.pct != null ? velocity.engineering.pct.toFixed(0) + '%' : '—'}</span>
-            </span>
-            <span className="dash-sprint-stat" onClick={() => setModal({title: 'Product & GTM — Sprint issues', slice: 'product_gtm'})}>
-              Product / GTM <strong>{velocity.product_gtm.done}/{velocity.product_gtm.total}</strong>
-              <span className="pct">{velocity.product_gtm.pct != null ? velocity.product_gtm.pct.toFixed(0) + '%' : '—'}</span>
-            </span>
-            <span className="dash-sprint-stat" onClick={() => setModal({title: 'Open bugs', slice: 'bugs_open'})} style={{borderColor: '#fecaca'}}>
-              Open bugs <strong>{velocity.bugs.open}</strong>
-              <span className="pct" style={{color: '#dc2626'}}>{velocity.bugs.fixed_this_sprint} fixed</span>
-            </span>
-          </div>
-        )}
         {!velocity.available && (
           <span style={{color: '#94a3b8'}}>Velocity unavailable — {velocity.note}</span>
         )}
@@ -1655,13 +1813,18 @@ function KPIDashboard() {
       <div className="kpi-page">
         {tab === 'build' && (
           <>
-            <Section num="01" title="North Star" hint="Composite — accuracy, latency, index build time">
+            <Section num="01" title="North Star">
               <div className="tile-grid">
                 <Tile
                   label="Time to Solution (TTS)"
                   value={build.north_star.tts.value}
                   unit={build.north_star.tts.unit}
-                  sub={build.north_star.tts.p50_min != null ? `Median ${build.north_star.tts.p50_min} min · across ${build.north_star.tts.n_solutions} solutions` : null}
+                  target={build.north_star.tts.target}
+                  delta={build.north_star.tts.delta_vs_prev}
+                  direction={build.north_star.tts.direction}
+                  prevSprint={build.north_star.tts.prev_sprint}
+                  sub={build.north_star.tts.definition}
+                  breakdown={build.north_star.tts.components}
                   meta={build.north_star.tts.last_first_query_at && `last query ${fmtAgo(build.north_star.tts.last_first_query_at)}`}
                   isStale={build.north_star.tts.is_stale}
                   isUnavailable={!build.north_star.tts.available}
@@ -1679,6 +1842,9 @@ function KPIDashboard() {
                   label="Solutions Accuracy (avg)"
                   value={pq.solutions_accuracy.value}
                   unit="%"
+                  target={pq.solutions_accuracy.target}
+                  delta={pq.solutions_accuracy.delta_vs_prev}
+                  direction={pq.solutions_accuracy.direction}
                   sub={`${pq.solutions_accuracy.n_sessions} sessions · ≥10 questions each`}
                   meta={pq.solutions_accuracy.last_session_at && `last ${fmtAgo(pq.solutions_accuracy.last_session_at)}`}
                   isStale={pq.solutions_accuracy.is_stale}
@@ -1691,6 +1857,9 @@ function KPIDashboard() {
                   value={pq.answer_latency_p95.value}
                   unit="ms"
                   decimals={0}
+                  target={pq.answer_latency_p95.target}
+                  delta={pq.answer_latency_p95.delta_vs_prev}
+                  direction={pq.answer_latency_p95.direction}
                   sub={`${(pq.answer_latency_p95.n_queries || 0).toLocaleString()} production queries`}
                   meta={pq.answer_latency_p95.last_query_at && `last ${fmtAgo(pq.answer_latency_p95.last_query_at)}`}
                   isStale={pq.answer_latency_p95.is_stale}
@@ -1702,6 +1871,9 @@ function KPIDashboard() {
                   label="Retrieval Latency p95"
                   value={pq.retrieval_latency_p95.value}
                   unit="ms"
+                  target={pq.retrieval_latency_p95.target}
+                  delta={pq.retrieval_latency_p95.delta_vs_prev}
+                  direction={pq.retrieval_latency_p95.direction}
                   sub={pq.retrieval_latency_p95.n_datasets != null ? `Qdrant dense · ${pq.retrieval_latency_p95.n_datasets} datasets` : null}
                   meta={pq.retrieval_latency_p95.last_measured_at && `last ${fmtAgo(pq.retrieval_latency_p95.last_measured_at)}`}
                   isStale={pq.retrieval_latency_p95.is_stale}
@@ -1713,6 +1885,9 @@ function KPIDashboard() {
                   label="Index Build Time"
                   value={pq.index_build_time.by_engine?.Qdrant?.value}
                   unit="min/1M"
+                  target={pq.index_build_time.target}
+                  delta={pq.index_build_time.delta_vs_prev}
+                  direction={pq.index_build_time.direction}
                   sub={Object.entries(pq.index_build_time.by_engine || {}).map(([k, v]) => `${k} ${v.value}`).join(' · ')}
                   meta={pq.index_build_time.last_run_at && `last ${fmtAgo(pq.index_build_time.last_run_at)}`}
                   isStale={pq.index_build_time.is_stale}
@@ -1723,17 +1898,8 @@ function KPIDashboard() {
               </div>
 
               {Object.keys(ph).length > 0 && (<>
-                <div className="quality-subhead" style={{marginTop: 22}}>Pipeline health · all leaderboard data sources</div>
-                <div className="tile-grid">
-                  {PH_TILE('crawling_speed', ph.crawling_speed, 'Crawling Speed', {decimals: 0, sub: ph.crawling_speed && `${(ph.crawling_speed.total_pages || 0).toLocaleString()} total pages · ${ph.crawling_speed.n_runs} runs`, lastAt: 'last_run_at'})}
-                  {PH_TILE('extraction_success', ph.extraction_success, 'Extraction Success', {sub: ph.extraction_success && `${ph.extraction_success.n_runs} runs · avg ${ph.extraction_success.avg_time_min}m each`, lastAt: 'last_run_at'})}
-                  {PH_TILE('chunking_volume', ph.chunking_volume, 'Chunks Generated', {decimals: 0, sub: ph.chunking_volume && `avg ${ph.chunking_volume.avg_chunk_size} tokens · ${ph.chunking_volume.n_runs} runs`, lastAt: 'last_run_at'})}
-                  {PH_TILE('metadata_accuracy', ph.metadata_accuracy, 'Metadata Accuracy', {sub: ph.metadata_accuracy && `${(ph.metadata_accuracy.fields_generated || 0).toLocaleString()} fields · ${ph.metadata_accuracy.n_runs} runs`, lastAt: 'last_run_at'})}
-                  {PH_TILE('rag_throughput', ph.rag_throughput, 'RAG Throughput', {sub: ph.rag_throughput && `${(ph.rag_throughput.total_queries || 0).toLocaleString()} queries · ${ph.rag_throughput.n_runs} runs`, lastAt: 'last_run_at'})}
-                  {PH_TILE('data_ingested', ph.data_ingested, 'Data Ingested', {sub: ph.data_ingested && `${ph.data_ingested.n_sources} sources connected`, lastAt: 'last_added_at'})}
-                  {PH_TILE('experiment_runs', ph.experiment_runs, 'Experiment Runs', {decimals: 0, sub: ph.experiment_runs && `${ph.experiment_runs.accuracy_runs} acc · ${ph.experiment_runs.latency_runs} lat · ${ph.experiment_runs.ingest_runs} ingest · ${ph.experiment_runs.index_runs} index`, lastAt: 'last_run_at'})}
-                  {PH_TILE('website_ui_pass', ph.website_ui_pass, 'Website UI Pass Rate', {sub: ph.website_ui_pass && `${ph.website_ui_pass.n_sessions} Playwright sessions`, lastAt: 'last_run_at'})}
-                </div>
+                <div className="quality-subhead" style={{marginTop: 22}}>Pipeline health · end-to-end stages</div>
+                <PipelineFlow ph={ph} openDetail={openDetail} />
               </>)}
 
               <div className="quality-subhead" style={{marginTop: 22}}>RAG Accuracy Delta vs HF Leaderboard <span className="delta-meta">— vs best frontier LLM, no-RAG baseline</span></div>
