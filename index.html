@@ -363,91 +363,128 @@
     .kpi-source-note { font-size: 11px; color: #94a3b8; margin-top: 10px; }
 
     /* ── New Product Dashboard ─────────────────────────────── */
-    .dash-tabs { display: flex; gap: 4px; padding: 0 24px; background: white;
-                 border-bottom: 1px solid #e2e8f0; }
-    .dash-tab { padding: 12px 18px; cursor: pointer; font-size: 13px;
-                font-weight: 600; color: #64748b; border-bottom: 2px solid transparent;
-                user-select: none; transition: color 0.15s, border-color 0.15s; }
-    .dash-tab:hover { color: #1e293b; }
-    .dash-tab.active { color: #4f46e5; border-bottom-color: #4f46e5; }
-    .dash-tab-icon { margin-right: 6px; opacity: 0.75; }
+    .dash-tabs { display: flex; gap: 0; padding: 0 32px; background: white;
+                 border-bottom: 1px solid #f1f5f9; }
+    .dash-tab { padding: 14px 18px; cursor: pointer; font-size: 13px;
+                font-weight: 500; color: #94a3b8; border-bottom: 2px solid transparent;
+                user-select: none; transition: color 0.15s, border-color 0.15s;
+                letter-spacing: -0.1px; }
+    .dash-tab:hover { color: #475569; }
+    .dash-tab.active { color: #0f172a; border-bottom-color: #0f172a; font-weight: 600; }
+    .dash-tab-icon { display: none; }  /* drop emoji icons */
 
-    .dash-sprint-bar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-                       padding: 14px 24px; background: linear-gradient(90deg, #eef2ff 0%, #f0f4ff 100%);
-                       border-bottom: 1px solid #e0e7ff; font-size: 12px; color: #4338ca; }
-    .sprint-badge { display: flex; flex-direction: column; gap: 3px; min-width: 170px;
-                    background: white; border: 1px solid #c7d2fe; border-radius: 10px;
-                    padding: 8px 14px; box-shadow: 0 1px 3px rgba(99,102,241,0.08); }
-    .sprint-badge-num { font-size: 17px; font-weight: 800; color: #4f46e5; letter-spacing: -0.2px; line-height: 1.1; }
-    .sprint-badge-dates { font-size: 11px; color: #64748b; font-weight: 500; }
-    .sprint-badge-progress { height: 4px; background: #e0e7ff; border-radius: 2px; overflow: hidden;
-                             margin-top: 4px; }
-    .sprint-badge-progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+    .dash-sprint-bar { display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+                       padding: 14px 32px; background: white;
+                       border-bottom: 1px solid #f1f5f9; font-size: 12px; color: #64748b; }
+    .sprint-badge { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .sprint-badge-row { display: flex; align-items: baseline; gap: 10px; }
+    .sprint-badge-num { font-size: 14px; font-weight: 700; color: #0f172a; letter-spacing: -0.2px; }
+    .sprint-badge-dates { font-size: 12px; color: #94a3b8; font-weight: 400; }
+    .sprint-badge-progress { height: 3px; background: #f1f5f9; border-radius: 2px; overflow: hidden;
+                             margin-top: 6px; width: 220px; max-width: 100%; }
+    .sprint-badge-progress-fill { height: 100%; background: #0f172a;
                                    border-radius: 2px; transition: width 0.3s; }
-    .sprint-badge-progress-label { font-size: 10px; color: #94a3b8; }
-    .sprint-stats { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .dash-sprint-label { font-weight: 700; }
+    .sprint-badge-progress-label { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+    .sprint-stats { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .dash-sprint-stat { display: inline-flex; align-items: center; gap: 6px;
-                        background: white; padding: 4px 10px; border-radius: 14px;
-                        border: 1px solid #c7d2fe; cursor: pointer; transition: border-color 0.15s; }
-    .dash-sprint-stat:hover { border-color: #818cf8; }
-    .dash-sprint-stat strong { color: #1e293b; }
-    .dash-sprint-stat .pct { color: #4f46e5; font-weight: 700; }
-    .dash-sprint-refreshed { margin-left: auto; color: #64748b; font-size: 11px; }
+                        padding: 5px 10px; border-radius: 16px;
+                        border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.15s;
+                        background: white; color: #475569; }
+    .dash-sprint-stat:hover { border-color: #94a3b8; background: #f8fafc; }
+    .dash-sprint-stat strong { color: #0f172a; font-weight: 600; }
+    .dash-sprint-stat .pct { color: #64748b; font-weight: 500; }
+    .dash-sprint-refreshed { margin-left: auto; color: #94a3b8; font-size: 11px;
+                             display: inline-flex; align-items: center; gap: 8px; }
+    .dash-sprint-refreshed a { color: #475569; text-decoration: none; padding: 4px 8px;
+                               border-radius: 4px; transition: background 0.15s; }
+    .dash-sprint-refreshed a:hover { background: #f1f5f9; color: #0f172a; }
 
-    .quality-subhead { font-size: 12px; font-weight: 700; color: #475569;
-                       margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .quality-subhead { font-size: 11px; font-weight: 600; color: #94a3b8;
+                       margin: 0 0 14px; text-transform: uppercase; letter-spacing: 0.6px; }
 
-    .dash-section { background: white; border: 1px solid #e2e8f0; border-radius: 12px;
-                    padding: 16px 20px; margin-bottom: 16px; }
-    .dash-section-head { display: flex; align-items: baseline; gap: 10px;
-                         padding-bottom: 10px; margin-bottom: 14px;
-                         border-bottom: 1px solid #e2e8f0; }
-    .dash-section-num { background: #eef2ff; color: #4f46e5; font-size: 11px;
-                        font-weight: 700; padding: 2px 8px; border-radius: 4px;
-                        flex-shrink: 0; }
-    .dash-section-title { font-size: 14px; font-weight: 700; color: #0f172a; }
-    .dash-section-hint { font-size: 11px; color: #94a3b8; margin-left: auto; }
+    .dash-section { background: transparent; border: none; padding: 0;
+                    margin-bottom: 36px; }
+    .dash-section-head { display: flex; align-items: baseline; gap: 12px;
+                         padding-bottom: 14px; margin-bottom: 18px;
+                         border-bottom: 1px solid #f1f5f9; }
+    .dash-section-num { color: #cbd5e1; font-size: 11px; font-weight: 600;
+                        font-variant-numeric: tabular-nums;
+                        background: transparent; padding: 0; flex-shrink: 0;
+                        letter-spacing: 0.5px; }
+    .dash-section-title { font-size: 15px; font-weight: 600; color: #0f172a;
+                          letter-spacing: -0.2px; }
+    .dash-section-hint { font-size: 12px; color: #94a3b8; margin-left: auto;
+                         font-weight: 400; }
+    .dash-section-link { color: #64748b; text-decoration: none; font-size: 12px;
+                         display: inline-flex; align-items: center; gap: 4px;
+                         padding: 3px 8px; border-radius: 4px; transition: all 0.15s; }
+    .dash-section-link:hover { background: #f1f5f9; color: #0f172a; }
+    .dash-section-link::after { content: '↗'; font-size: 11px; opacity: 0.6; }
 
-    .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-    .tile { background: #fafbff; border: 1px solid #e2e8f0; border-radius: 10px;
-            padding: 14px 16px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
-            display: flex; flex-direction: column; gap: 6px; min-height: 110px; }
-    .tile:hover { border-color: #818cf8; box-shadow: 0 3px 12px rgba(129,140,248,0.12); }
-    .tile.tile-unavailable { background: #f8fafc; cursor: default; border-style: dashed; }
+    .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .tile { background: white; border: 1px solid #f1f5f9; border-radius: 10px;
+            padding: 16px 18px; cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+            display: flex; flex-direction: column; gap: 8px; min-height: 118px;
+            position: relative; }
+    .tile:hover { border-color: #cbd5e1; box-shadow: 0 1px 3px rgba(15,23,42,0.04),
+                                                       0 4px 12px rgba(15,23,42,0.04); }
+    .tile:active { transform: translateY(1px); }
+    .tile.tile-unavailable { background: #fafbfc; cursor: default; border-style: dashed;
+                              border-color: #e2e8f0; }
     .tile.tile-unavailable:hover { border-color: #e2e8f0; box-shadow: none; }
-    .tile.tile-stale { border: 1px solid #f59e0b; background: #fffbeb; }
+    .tile.tile-stale { border-color: #fbbf24; background: #fffdf5; }
     .tile.tile-stale .tile-label { color: #b45309; }
-    .tile-label { font-size: 11px; font-weight: 700; text-transform: uppercase;
-                  letter-spacing: 0.4px; color: #64748b; }
-    .tile-value { font-size: 28px; font-weight: 800; color: #0f172a; line-height: 1.1; }
-    .tile.tile-unavailable .tile-value { color: #cbd5e1; }
-    .tile-unit { font-size: 13px; font-weight: 500; color: #64748b; margin-left: 3px; }
-    .tile-sub { font-size: 11px; color: #64748b; line-height: 1.45; }
-    .tile-meta { font-size: 10px; color: #94a3b8; margin-top: auto;
-                 display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .tile-label { font-size: 11px; font-weight: 500; text-transform: none;
+                  letter-spacing: 0; color: #64748b; }
+    .tile-value { font-size: 32px; font-weight: 700; color: #0f172a; line-height: 1;
+                  letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+    .tile.tile-unavailable .tile-value { color: #e2e8f0; font-weight: 500; }
+    .tile-unit { font-size: 13px; font-weight: 400; color: #94a3b8; margin-left: 4px; }
+    .tile-sub { font-size: 11px; color: #94a3b8; line-height: 1.5; }
+    .tile-meta { font-size: 11px; color: #cbd5e1; margin-top: auto;
+                 display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+                 font-weight: 400; }
     .tile-stale-pill { background: #fef3c7; color: #b45309; padding: 1px 6px; border-radius: 8px;
                        font-size: 10px; font-weight: 600; }
-    .tile-placeholder-pill { background: #f1f5f9; color: #64748b; padding: 1px 6px; border-radius: 8px;
-                             font-size: 10px; font-weight: 600; }
+    .tile-placeholder-pill { background: #f1f5f9; color: #94a3b8; padding: 1px 6px; border-radius: 8px;
+                             font-size: 10px; font-weight: 500; }
     .tile-fresh-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
-    .tile-blocker { font-size: 11px; color: #94a3b8; font-style: italic;
-                    border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: auto; }
+    .tile-blocker { font-size: 11px; color: #94a3b8; font-style: normal;
+                    border-top: 1px dashed #e2e8f0; padding-top: 8px; margin-top: auto;
+                    line-height: 1.5; }
+    .tile-link { position: absolute; top: 12px; right: 12px; opacity: 0;
+                 transition: opacity 0.15s; color: #94a3b8; text-decoration: none;
+                 font-size: 11px; }
+    .tile:hover .tile-link { opacity: 1; }
+    .tile-link:hover { color: #0f172a; }
 
-    .ns-tile { background: linear-gradient(135deg, #eef2ff 0%, #fdf2f8 100%);
-               border: 1px solid #c7d2fe; grid-column: 1 / -1; min-height: 140px;
-               padding: 20px 24px; }
-    .ns-tile .tile-label { font-size: 12px; }
-    .ns-tile .tile-value { font-size: 52px; font-weight: 800; letter-spacing: -1px; }
-    .ns-tile .tile-unit { font-size: 18px; }
-    .ns-tile .tile-sub { font-size: 13px; color: #475569; }
+    .ns-tile { background: #0f172a; color: white;
+               border: 1px solid #0f172a; grid-column: 1 / -1; min-height: 160px;
+               padding: 24px 28px; }
+    .ns-tile .tile-label { font-size: 12px; color: #94a3b8; font-weight: 500; }
+    .ns-tile .tile-value { font-size: 56px; font-weight: 700; letter-spacing: -1.5px;
+                            color: white; }
+    .ns-tile .tile-unit { font-size: 20px; color: #94a3b8; }
+    .ns-tile .tile-sub { font-size: 13px; color: #cbd5e1; }
+    .ns-tile .tile-meta { color: #64748b; }
+    .ns-tile .tile-link { color: #64748b; }
+    .ns-tile .tile-link:hover { color: white; }
+    .ns-tile:hover { border-color: #0f172a; box-shadow: 0 4px 24px rgba(15,23,42,0.16); }
 
     /* GTM banner */
-    .gtm-banner { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px;
-                  padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: #78350f;
-                  display: flex; align-items: flex-start; gap: 10px; }
-    .gtm-banner-icon { font-weight: 800; color: #92400e; flex-shrink: 0; }
-    .gtm-banner strong { color: #92400e; }
+    .gtm-banner { background: #fffdf5; border: 1px solid #fbbf24; border-radius: 10px;
+                  padding: 14px 18px; margin-bottom: 28px; font-size: 12px; color: #78350f;
+                  display: flex; align-items: flex-start; gap: 12px; line-height: 1.55; }
+    .gtm-banner-icon { font-weight: 700; color: #92400e; flex-shrink: 0;
+                        background: #fbbf24; color: white; width: 18px; height: 18px;
+                        border-radius: 50%; display: inline-flex; align-items: center;
+                        justify-content: center; font-size: 11px; }
+    .gtm-banner strong { color: #92400e; font-weight: 600; }
+    .gtm-banner a { color: #b45309; text-decoration: underline; }
+
+    /* KPI page bg + container */
+    .kpi-page { padding: 32px 36px; background: #f8fafc; }
 
     /* Drill-down modal */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 1000;
@@ -703,39 +740,39 @@ window.addEventListener('error', function(e) {
   // ── Issue drill-down fixtures ──────────────────────────────────────
   const ISSUE_FIXTURES = {
     engineering: [
-      { number: 954, title: 'Worker node retry timeout on storage layer', html_url: '#', state: 'open',
+      { number: 954, title: 'Worker node retry timeout on storage layer', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'open',
         labels: ['bug','engineering'], assignees: ['@infra'], created_at: dAgo(1), closed_at: null },
-      { number: 950, title: 'Vector DB auth flaky in background tasks', html_url: '#', state: 'open',
+      { number: 950, title: 'Vector DB auth flaky in background tasks', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'open',
         labels: ['bug','engineering'], assignees: ['@deploy-owner'], created_at: dAgo(1), closed_at: null },
-      { number: 921, title: 'Tagged experiment-run ingest path', html_url: '#', state: 'closed',
+      { number: 921, title: 'Tagged experiment-run ingest path', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'closed',
         labels: ['engineering'], assignees: ['@infra'], created_at: dAgo(5), closed_at: dAgo(2) },
     ],
     product_gtm: [
-      { number: 918, title: 'Product Dashboard', html_url: '#', state: 'open',
+      { number: 918, title: 'Product Dashboard', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'open',
         labels: ['product'], assignees: ['@pm','@author'], created_at: dAgo(5), closed_at: null },
-      { number: 905, title: 'GTM placeholder tab', html_url: '#', state: 'closed',
+      { number: 905, title: 'GTM placeholder tab', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'closed',
         labels: ['product','gtm'], assignees: ['@pm'], created_at: dAgo(5), closed_at: dAgo(4) },
     ],
     bugs_open: [
-      { number: 954, title: 'Worker node retry timeout', html_url: '#', state: 'open',
+      { number: 954, title: 'Worker node retry timeout', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'open',
         labels: ['bug'], assignees: ['@infra'], created_at: dAgo(1), closed_at: null },
-      { number: 951, title: 'Mobile UI overflow in chat surface', html_url: '#', state: 'open',
+      { number: 951, title: 'Mobile UI overflow in chat surface', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'open',
         labels: ['bug'], assignees: [], created_at: dAgo(1), closed_at: null },
-      { number: 950, title: 'Vector DB auth flaky', html_url: '#', state: 'open',
+      { number: 950, title: 'Vector DB auth flaky', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'open',
         labels: ['bug'], assignees: ['@deploy-owner'], created_at: dAgo(1), closed_at: null },
     ],
     bugs_fixed: [
-      { number: 933, title: 'Table dedup: FK + denormalized column collision', html_url: '#', state: 'closed',
+      { number: 933, title: 'Table dedup: FK + denormalized column collision', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'closed',
         labels: ['bug'], assignees: ['@author'], created_at: dAgo(3), closed_at: dAgo(2) },
     ],
     papers: [
-      { number: 47, title: 'Technical writeup — v2 with new benchmarks', html_url: '#', state: 'closed',
+      { number: 47, title: 'Technical writeup — v2 with new benchmarks', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'closed',
         labels: ['paper'], assignees: ['@author'], created_at: dAgo(9), closed_at: dAgo(3) },
-      { number: 49, title: 'Benchmark results writeup', html_url: '#', state: 'closed',
+      { number: 49, title: 'Benchmark results writeup', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'closed',
         labels: ['paper'], assignees: [], created_at: dAgo(6), closed_at: dAgo(2) },
     ],
     collaterals: [
-      { number: 51, title: 'Customer pitch deck — v1', html_url: '#', state: 'closed',
+      { number: 51, title: 'Customer pitch deck — v1', html_url: 'https://github.com/aintropy-ai/aintropy-engine-product/issues/__N__', state: 'closed',
         labels: ['collateral'], assignees: ['@pm'], created_at: dAgo(5), closed_at: dAgo(4) },
     ],
   };
@@ -878,7 +915,11 @@ window.addEventListener('error', function(e) {
     const path = u.pathname;
     const params = u.searchParams;
 
-    if (path === '/api/dashboard')                        return SNAPSHOT;
+    if (path === '/api/dashboard') {
+      // Refresh feels broken if computed_at never moves. Stamp it per call so
+      // "Updated X ago" actually updates when the user hits refresh.
+      return { ...SNAPSHOT, computed_at: new Date().toISOString() };
+    }
     if (path === '/api/datasets')                         return DATASETS;
     if (path === '/api/tables')                           return Object.keys(TABLES);
     if (path === '/api/feedback')                         return FEEDBACK_ROWS;
@@ -888,8 +929,12 @@ window.addEventListener('error', function(e) {
     if (issuesMatch) {
       const slice = issuesMatch[1];
       const items = ISSUE_FIXTURES[slice] || [];
+      const realRepo = slice === 'papers' || slice === 'collaterals'
+        ? 'aintropy-ai/publications' : 'aintropy-ai/aintropy-engine-product';
       return { available: true, slice, sprint: SNAPSHOT.sprint, items: items.map(i => ({
-        number: i.number, title: i.title, url: i.html_url, state: i.state,
+        number: i.number, title: i.title,
+        url: `https://github.com/${realRepo}/issues/${i.number}`,
+        state: i.state,
         labels: i.labels, created_at: i.created_at, closed_at: i.closed_at,
         assignees: i.assignees,
       })) };
@@ -1267,7 +1312,7 @@ function fmtNum(v, opts = {}) {
   return unit ? <>{s}<span className="tile-unit">{unit}</span></> : s;
 }
 
-function Tile({ label, value, unit, sub, meta, isStale, isUnavailable, blocker, onClick, decimals = 1, large = false, locale = true, asPercent = false }) {
+function Tile({ label, value, unit, sub, meta, isStale, isUnavailable, blocker, onClick, decimals = 1, large = false, locale = true, sourceHref }) {
   const cls = [
     'tile',
     large ? 'ns-tile' : '',
@@ -1285,6 +1330,10 @@ function Tile({ label, value, unit, sub, meta, isStale, isUnavailable, blocker, 
 
   return (
     <div className={cls} onClick={isUnavailable ? undefined : onClick}>
+      {sourceHref && !isUnavailable && (
+        <a className="tile-link" href={sourceHref} target="_blank" rel="noreferrer"
+           onClick={e => e.stopPropagation()} title="View source on GitHub">↗</a>
+      )}
       <div className="tile-label">{label}</div>
       <div>
         <span className="tile-value">{displayValue}</span>
@@ -1308,12 +1357,17 @@ function Tile({ label, value, unit, sub, meta, isStale, isUnavailable, blocker, 
   );
 }
 
-function Section({ num, title, hint, children }) {
+function Section({ num, title, hint, children, link, linkLabel }) {
   return (
     <div className="dash-section">
       <div className="dash-section-head">
         {num != null && <span className="dash-section-num">{num}</span>}
         <span className="dash-section-title">{title}</span>
+        {link && (
+          <a className="dash-section-link" href={link} target="_blank" rel="noreferrer">
+            {linkLabel || 'View on GitHub'}
+          </a>
+        )}
         {hint && <span className="dash-section-hint">{hint}</span>}
       </div>
       {children}
@@ -1563,8 +1617,10 @@ function KPIDashboard() {
 
       <div className="dash-sprint-bar">
         <div className="sprint-badge">
-          <div className="sprint-badge-num">Sprint {sprint.number ?? '—'}</div>
-          <div className="sprint-badge-dates">{fmtDateShort(sprint.start_iso)} → {fmtDateShort(sprint.end_iso)}</div>
+          <div className="sprint-badge-row">
+            <span className="sprint-badge-num">Sprint {sprint.number ?? '—'}</span>
+            <span className="sprint-badge-dates">{fmtDateShort(sprint.start_iso)} → {fmtDateShort(sprint.end_iso)}</span>
+          </div>
           <div className="sprint-badge-progress"><div className="sprint-badge-progress-fill" style={{width: sprintProgressPct + '%'}} /></div>
           <div className="sprint-badge-progress-label">Day {sprintElapsedDays} of {sprintDayCount} · {sprintProgressPct}% elapsed</div>
         </div>
@@ -1588,14 +1644,18 @@ function KPIDashboard() {
           <span style={{color: '#94a3b8'}}>Velocity unavailable — {velocity.note}</span>
         )}
         <span className="dash-sprint-refreshed">
-          Updated {fmtAgo(data.computed_at)} · <a href="#" onClick={e => { e.preventDefault(); reload(); }} style={{color: '#4f46e5'}}>refresh</a>
+          <span>{loading ? 'Refreshing…' : `Updated ${fmtAgo(data.computed_at)}`}</span>
+          <a href="#" onClick={e => { e.preventDefault(); if (!loading) reload(); }}
+             style={loading ? {opacity: 0.5, pointerEvents: 'none'} : {}}>
+            {loading ? '⟳' : '↻ refresh'}
+          </a>
         </span>
       </div>
 
       <div className="kpi-page">
         {tab === 'build' && (
           <>
-            <Section num="1" title="North Star" hint="Time from pipeline start → first successful query · click for per-solution detail">
+            <Section num="01" title="North Star" hint="Composite — accuracy, latency, index build time">
               <div className="tile-grid">
                 <Tile
                   label="Time to Solution (TTS)"
@@ -1612,7 +1672,7 @@ function KPIDashboard() {
               </div>
             </Section>
 
-            <Section num="2" title="Product Quality" hint="Click any tile → underlying rows with full columns">
+            <Section num="02" title="Product Quality" hint="Click any tile for underlying rows">
               <div className="quality-subhead">Answer quality & latency</div>
               <div className="tile-grid">
                 <Tile
@@ -1699,7 +1759,10 @@ function KPIDashboard() {
               </div>
             </Section>
 
-            <Section num="3" title="Build Velocity" hint={`Sprint window · ${fmtDateShort(sprint.start_iso)} → ${fmtDateShort(sprint.end_iso)} · resets every Friday 9pm PT`}>
+            <Section num="03" title="Build Velocity"
+                     link={velocity.source ? `https://${velocity.source}/issues?q=is:issue+updated:>=${sprint.start_iso.slice(0,10)}` : null}
+                     linkLabel="GitHub issues"
+                     hint={`${fmtDateShort(sprint.start_iso)} → ${fmtDateShort(sprint.end_iso)} · resets every Friday 9pm PT`}>
               {!velocity.available && <div className="tile-blocker" style={{borderTop: 'none', marginTop: 0, padding: 0}}>{velocity.note}</div>}
               {velocity.available && (
                 <div className="tile-grid">
@@ -1709,6 +1772,7 @@ function KPIDashboard() {
                     unit="%"
                     sub={`${velocity.engineering.done} done · ${velocity.engineering.open} open · ${velocity.engineering.total} total`}
                     meta="sprint"
+                    sourceHref={`https://${velocity.source}/issues?q=is:issue+label:engineering+is:closed+closed:>=${sprint.start_iso.slice(0,10)}`}
                     onClick={() => setModal({title: 'Engineering — Sprint issues', slice: 'engineering'})}
                   />
                   <Tile
@@ -1717,6 +1781,7 @@ function KPIDashboard() {
                     unit="%"
                     sub={`${velocity.product_gtm.done} done · ${velocity.product_gtm.open} open · ${velocity.product_gtm.total} total`}
                     meta="sprint"
+                    sourceHref={`https://${velocity.source}/issues?q=is:issue+label:product+is:closed+closed:>=${sprint.start_iso.slice(0,10)}`}
                     onClick={() => setModal({title: 'Product & GTM — Sprint issues', slice: 'product_gtm'})}
                   />
                   <Tile
@@ -1725,6 +1790,7 @@ function KPIDashboard() {
                     decimals={0}
                     sub={`${velocity.bugs.fixed_this_sprint} fixed this sprint`}
                     meta="across all severities"
+                    sourceHref={`https://${velocity.source}/issues?q=is:issue+is:open+label:bug`}
                     onClick={() => setModal({title: 'Open bugs', slice: 'bugs_open'})}
                   />
                   <Tile
@@ -1735,30 +1801,36 @@ function KPIDashboard() {
                     meta="sprint"
                     isUnavailable={velocity.bugs.avg_time_to_fix_hours == null}
                     blocker="No bugs closed within current sprint window"
+                    sourceHref={`https://${velocity.source}/issues?q=is:issue+label:bug+is:closed+closed:>=${sprint.start_iso.slice(0,10)}`}
                     onClick={() => setModal({title: 'Bugs fixed this sprint', slice: 'bugs_fixed'})}
                   />
                 </div>
               )}
             </Section>
 
-            <Section num="4" title="Product Readiness" hint="Closed this sprint · click for the issue list">
+            <Section num="04" title="Product Readiness"
+                     link={readiness.source ? `https://${readiness.source}/issues?q=is:issue+is:closed+closed:>=${sprint.start_iso.slice(0,10)}` : null}
+                     linkLabel="Publications repo"
+                     hint="Closed this sprint · click for the issue list">
               {!readiness.available && <div className="tile-blocker" style={{borderTop: 'none', marginTop: 0, padding: 0}}>{readiness.note}</div>}
               {readiness.available && (
                 <div className="tile-grid">
                   <Tile
-                    label="# Paper Publications"
+                    label="Paper Publications"
                     value={readiness.paper_publications.count}
                     decimals={0}
                     sub="Closed this sprint"
                     meta="aintropy-ai/publications"
+                    sourceHref={`https://${readiness.source}/issues?q=is:issue+is:closed+-label:collateral+closed:>=${sprint.start_iso.slice(0,10)}`}
                     onClick={() => setModal({title: 'Paper Publications — Sprint', slice: 'papers'})}
                   />
                   <Tile
-                    label="# Collaterals"
+                    label="Collaterals"
                     value={readiness.collaterals.count}
                     decimals={0}
                     sub="Closed this sprint"
                     meta="label: collateral"
+                    sourceHref={`https://${readiness.source}/issues?q=is:issue+is:closed+label:collateral+closed:>=${sprint.start_iso.slice(0,10)}`}
                     onClick={() => setModal({title: 'Collaterals — Sprint', slice: 'collaterals'})}
                   />
                 </div>
@@ -1771,9 +1843,9 @@ function KPIDashboard() {
           <>
             <div className="gtm-banner">
               <span className="gtm-banner-icon">!</span>
-              <span><strong>GTM metrics ship in a follow-up.</strong> The tiles below are placeholders that fill in automatically once each data source is instrumented. Each tile names its specific blocker inline so the work is unambiguous.</span>
+              <span><strong>GTM metrics ship in a follow-up.</strong> The tiles below are placeholders that fill in automatically once each data source is instrumented. Tracking in <a href="https://github.com/aintropy-ai/aintropy-engine-product/issues/918" target="_blank" rel="noreferrer">issue #918</a>.</span>
             </div>
-            <Section num="1" title="North Star" hint="TTS across active solutions">
+            <Section num="01" title="North Star" hint="TTS across active solutions">
               <div className="tile-grid">
                 <Tile
                   label="TTS · # Solutions"
@@ -1784,7 +1856,7 @@ function KPIDashboard() {
                 />
               </div>
             </Section>
-            <Section num="2" title="GTM Quality">
+            <Section num="02" title="GTM Quality">
               <div className="tile-grid">
                 <Tile
                   label="Impressions (Play)"
@@ -1806,7 +1878,7 @@ function KPIDashboard() {
                 />
               </div>
             </Section>
-            <Section num="3" title="Growth">
+            <Section num="03" title="Growth">
               <div className="tile-grid">
                 <Tile
                   label="# Leads"
