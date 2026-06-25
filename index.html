@@ -541,6 +541,48 @@
     /* KPI page bg + container */
     .kpi-page { padding: 32px 36px; background: #f8fafc; }
 
+    /* Inline drill-down (replaces modal popups) */
+    .inline-detail { background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+                     margin-top: 14px; overflow: hidden;
+                     box-shadow: 0 1px 3px rgba(15,23,42,0.04); }
+    .inline-detail-head { display: flex; align-items: center; gap: 12px;
+                          padding: 14px 18px; border-bottom: 1px solid #f1f5f9; }
+    .inline-detail-title { font-size: 13px; font-weight: 600; color: #0f172a;
+                           flex: 1; min-width: 0; }
+    .inline-detail-search { width: 220px; padding: 6px 10px; font-size: 12px;
+                            border: 1px solid #e2e8f0; border-radius: 6px;
+                            background: #f8fafc; outline: none; }
+    .inline-detail-search:focus { border-color: #818cf8; background: white; }
+    .inline-detail-close { background: transparent; border: none; cursor: pointer;
+                           color: #94a3b8; font-size: 16px; padding: 4px 10px;
+                           border-radius: 6px; }
+    .inline-detail-close:hover { background: #f1f5f9; color: #0f172a; }
+    .inline-detail-meta { display: flex; flex-wrap: wrap; gap: 18px;
+                          padding: 10px 18px; background: #f8fafc;
+                          border-bottom: 1px solid #f1f5f9;
+                          font-size: 11px; color: #64748b; }
+    .inline-detail-meta code { background: #eef2ff; color: #4f46e5;
+                                padding: 1px 5px; border-radius: 4px; font-size: 10px; }
+    .inline-detail-cols { display: flex; flex-wrap: wrap; gap: 4px 14px;
+                          padding: 10px 18px; border-bottom: 1px solid #f1f5f9;
+                          font-size: 11px; color: #64748b; }
+    .inline-detail-cols label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+    .inline-detail-cols input { margin: 0; }
+    .inline-detail-body { max-height: 520px; overflow-y: auto; }
+
+    /* Dataset filter strip — drives the interlinked tile recompute */
+    .dataset-filter { display: flex; align-items: center; gap: 10px;
+                      padding: 10px 14px; margin-bottom: 16px;
+                      background: #f8fafc; border: 1px solid #e2e8f0;
+                      border-radius: 8px; }
+    .dataset-filter-label { font-size: 11px; font-weight: 600; color: #475569;
+                            text-transform: uppercase; letter-spacing: 0.4px; }
+    .dataset-filter select { padding: 5px 10px; font-size: 12px; color: #0f172a;
+                              border: 1px solid #e2e8f0; border-radius: 6px;
+                              background: white; cursor: pointer; min-width: 180px; }
+    .dataset-filter select:disabled { opacity: 0.5; cursor: wait; }
+    .dataset-filter-hint { font-size: 10px; color: #94a3b8; font-style: italic; margin-left: auto; }
+
     /* Drill-down modal */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 1000;
                       display: flex; align-items: center; justify-content: center; padding: 24px; }
@@ -698,16 +740,12 @@ window.addEventListener('error', function(e) {
     build: {
       north_star: {
         tts: {
-          value: 78.4, unit: '/100', target: 85, delta_vs_prev: 3.2, prev_sprint: 14,
-          is_stale: false, available: true, direction: 'higher_is_better',
-          definition: 'Composite product-health score · accuracy · latency · index build time',
-          source: 'composite of accuracy + latency + index build time',
-          last_first_query_at: hAgo(3), n_solutions: 4, p50_min: null,
-          components: [
-            { name: 'Accuracy',         value: 61.4, unit: '%',     weight: 0.5, score: 61.4 },
-            { name: 'Answer Latency',   value: 4250, unit: 'ms',    weight: 0.3, score: 87.5 },
-            { name: 'Index Build Time', value: 12.3, unit: 'min/1M',weight: 0.2, score: 87.7 },
-          ],
+          value: 18.4, unit: 'hours', target: 12, delta_vs_prev: -2.6, prev_sprint: 14,
+          is_stale: false, available: true, direction: 'lower_is_better',
+          definition: 'Wall-clock time from first ingest to first query that reaches ≥70% accuracy',
+          source: 'leaderboard.pipeline_jobs ⋈ leaderboard.search_telemetry',
+          acceptable_accuracy_pct: 70,
+          last_solution_at: hAgo(3), n_solutions: 4, median_hours: 14.2,
         },
       },
       product_quality: {
@@ -985,9 +1023,32 @@ window.addEventListener('error', function(e) {
     const params = u.searchParams;
 
     if (path === '/api/dashboard') {
-      // Refresh feels broken if computed_at never moves. Stamp it per call so
-      // "Updated X ago" actually updates when the user hits refresh.
-      return { ...SNAPSHOT, computed_at: new Date().toISOString() };
+      // Stamp computed_at per call so refresh feels responsive.
+      const snap = JSON.parse(JSON.stringify(SNAPSHOT));
+      snap.computed_at = new Date().toISOString();
+      // Dataset filter: recompute tile values for the chosen dataset so the
+      // interlink Kunal asked for is visible. In production the backend
+      // re-runs the SQL with a WHERE clause; here we just scale fixture vals.
+      const dsId = params.get('dataset_id');
+      if (dsId) {
+        const ratios = {1: {acc: 1.30, lat: 0.74, idx: 0.78, rag: 1.6},   // Dataset A — strong
+                       2: {acc: 1.05, lat: 0.92, idx: 0.95, rag: 0.4},   // Dataset B — middling
+                       3: {acc: 1.42, lat: 0.65, idx: 0.62, rag: 2.1},   // Dataset C — best
+                       4: {acc: 0.86, lat: 1.18, idx: 1.40, rag: -1.2}}; // Dataset D — weakest
+        const r = ratios[dsId];
+        if (r) {
+          const pq = snap.build.product_quality;
+          pq.solutions_accuracy.value = +(pq.solutions_accuracy.value * r.acc).toFixed(1);
+          pq.answer_latency_p95.value = Math.round(pq.answer_latency_p95.value * r.lat);
+          pq.index_build_time.by_engine.Qdrant.value     = +(pq.index_build_time.by_engine.Qdrant.value * r.idx).toFixed(1);
+          pq.index_build_time.by_engine.OpenSearch.value = +(pq.index_build_time.by_engine.OpenSearch.value * r.idx).toFixed(1);
+          pq.rag_accuracy_delta.rows = pq.rag_accuracy_delta.rows.map(row => ({
+            ...row, delta_pct: +(row.delta_pct + r.rag).toFixed(1),
+          }));
+          snap.build.north_star.tts.value = +(snap.build.north_star.tts.value * r.lat).toFixed(1);
+        }
+      }
+      return snap;
     }
     if (path === '/api/datasets')                         return DATASETS;
     if (path === '/api/tables')                           return Object.keys(TABLES);
@@ -1633,7 +1694,166 @@ function TileDetailModal({ title, tableName, aggregate, datasetId, onClose }) {
   );
 }
 
-function PipelineFlow({ ph, openDetail }) {
+/* Inline drill-down beneath a clicked tile. Replaces the popup modal —
+ * per Kunal's directive ("don't make it open the pop up, let it show in
+ * the same way"). Lists underlying rows with search + column toggle.
+ */
+function InlineDetail({ title, tableName, datasetId, tile, onClose }) {
+  const [rows, setRows] = useState(null);
+  const [err, setErr] = useState(null);
+  const [search, setSearch] = useState('');
+  const [hiddenCols, setHiddenCols] = useState(new Set());
+
+  useEffect(() => {
+    if (!tableName) { setRows([]); return; }
+    const url = API_BASE + '/api/table/' + tableName + (datasetId != null ? '?dataset_id=' + datasetId : '');
+    setRows(null);
+    fetch(url)
+      .then(r => { if (!r.ok) throw new Error('Fetch failed (' + r.status + ')'); return r.json(); })
+      .then(d => setRows(Array.isArray(d) ? d.slice().reverse() : []))
+      .catch(e => setErr(String(e.message || e)));
+  }, [tableName, datasetId]);
+
+  const columns = useMemo(() => rows && rows.length > 0 ? Object.keys(rows[0]) : [], [rows]);
+  const visibleCols = columns.filter(c => !hiddenCols.has(c));
+  const filtered = !search.trim() ? (rows || [])
+    : rows.filter(r => Object.values(r).some(v => v != null && String(v).toLowerCase().includes(search.toLowerCase())));
+
+  return (
+    <div className="inline-detail">
+      <div className="inline-detail-head">
+        <span className="inline-detail-title">{title}</span>
+        {tableName && (
+          <input className="inline-detail-search" placeholder="Search rows…"
+                 value={search} onChange={e => setSearch(e.target.value)} />
+        )}
+        <button className="inline-detail-close" onClick={onClose}>✕</button>
+      </div>
+      {tile && (
+        <div className="inline-detail-meta">
+          <span>source: <code>{tile.source}</code></span>
+          {tile.n_sessions != null && <span>n: {tile.n_sessions} sessions</span>}
+          {tile.n_queries != null && <span>n: {tile.n_queries.toLocaleString()} queries</span>}
+          {tile.n_solutions != null && <span>n: {tile.n_solutions} solutions</span>}
+          {tile.target != null && <span>target: {tile.target}{tile.unit || ''}</span>}
+        </div>
+      )}
+      {columns.length > 0 && (
+        <div className="inline-detail-cols">
+          {columns.map(c => (
+            <label key={c} title={c}>
+              <input type="checkbox" checked={!hiddenCols.has(c)}
+                onChange={() => setHiddenCols(prev => { const s = new Set(prev); if (s.has(c)) s.delete(c); else s.add(c); return s; })} />
+              {c.replace(/_/g, ' ')}
+            </label>
+          ))}
+        </div>
+      )}
+      <div className="inline-detail-body">
+        {!tableName && <div className="issue-empty" style={{padding: 16}}>No row-level data for this metric.</div>}
+        {tableName && err && <div className="issue-empty">Could not load rows: {err}</div>}
+        {tableName && !err && rows == null && <div className="issue-empty"><div className="spinner" /></div>}
+        {tableName && rows && rows.length === 0 && <div className="issue-empty">No rows in {tableName}.</div>}
+        {tableName && rows && rows.length > 0 && (
+          <table className="detail-table">
+            <thead><tr>{visibleCols.map(c => <th key={c}>{c.replace(/_/g, ' ')}</th>)}</tr></thead>
+            <tbody>
+              {filtered.map((r, i) => (
+                <tr key={r.id ?? i}>
+                  {visibleCols.map(c => {
+                    const v = r[c];
+                    return (
+                      <td key={c} title={v != null ? String(v) : ''}>
+                        {v == null ? <span style={{color: '#cbd5e1'}}>—</span>
+                          : typeof v === 'boolean' ? (v ? '✓' : '✗')
+                          : typeof v === 'number' && Number.isInteger(v) ? v.toLocaleString()
+                          : typeof v === 'number' ? v.toFixed(2)
+                          : String(v)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* Inline issue list (Build Velocity / Readiness drill-downs). Fetches the
+ * GitHub-sourced list from /api/dashboard/issues/{slice}.
+ */
+function IssueListInline({ slice, onClose }) {
+  const [items, setItems] = useState(null);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    setItems(null); setErr(null);
+    fetch(API_BASE + '/api/dashboard/issues/' + slice)
+      .then(r => r.json())
+      .then(d => d.available ? setItems(d.items) : setErr(d.note || 'No data'))
+      .catch(e => setErr(String(e)));
+  }, [slice]);
+
+  return (
+    <div className="inline-detail">
+      <div className="inline-detail-head">
+        <span className="inline-detail-title">Issues — {slice.replace(/_/g, ' ')}</span>
+        <button className="inline-detail-close" onClick={onClose}>✕</button>
+      </div>
+      <div className="inline-detail-body">
+        {err && <div className="issue-empty">{err}</div>}
+        {!err && !items && <div className="issue-empty"><div className="spinner" /></div>}
+        {items && items.length === 0 && <div className="issue-empty">No issues in this slice.</div>}
+        {items && items.length > 0 && (
+          <ul className="issue-list">
+            {items.map(i => (
+              <li key={i.number} className="issue-item">
+                <span className="issue-num">#{i.number}</span>
+                <div style={{flex: 1}}>
+                  <div className="issue-title-text"><a href={i.url} target="_blank" rel="noreferrer">{i.title}</a></div>
+                  <div className="issue-meta">
+                    <span className={'issue-state-' + i.state}>{i.state}</span>
+                    {i.labels.length > 0 && <span>{i.labels.join(' · ')}</span>}
+                    {i.assignees.length > 0 && <span>→ {i.assignees.join(', ')}</span>}
+                    {i.closed_at && <span>closed {fmtAgo(i.closed_at)}</span>}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* Dataset filter at the top of Product Quality — Kunal: "if I filter on a
+ * video, all three numbers should show up." Changing this re-fetches the
+ * dashboard so every tile recomputes together.
+ */
+function DatasetFilter({ datasetId, datasets, onChange, loading }) {
+  return (
+    <div className="dataset-filter">
+      <span className="dataset-filter-label">Filter</span>
+      <select
+        value={datasetId ?? ''}
+        onChange={e => onChange(e.target.value ? Number(e.target.value) : null)}
+        disabled={loading}
+      >
+        <option value="">All datasets</option>
+        {(datasets || []).map(d => (
+          <option key={d.dataset_id} value={d.dataset_id}>{d.name}</option>
+        ))}
+      </select>
+      <span className="dataset-filter-hint">tiles recompute on change</span>
+    </div>
+  );
+}
+
+function PipelineFlow({ ph, onSelect }) {
   // Canonical pipeline order
   const stages = [
     { key: 'crawling_speed',     label: 'Crawl' },
@@ -1666,7 +1886,7 @@ function PipelineFlow({ ph, openDetail }) {
         const short = tile.short_value || (tile.value != null ? String(tile.value) : '—');
         return (
           <React.Fragment key={s.key}>
-            <div className="pipeline-stage" onClick={() => openDetail(s.key, tile)} title="Click for underlying rows">
+            <div className="pipeline-stage" onClick={() => onSelect && onSelect(s.key, tile)} title="Click for underlying rows">
               <div className="pipeline-stage-row">
                 <span className={'pipeline-stage-dot ' + status} />
                 <span className="pipeline-stage-name">{s.label}</span>
@@ -1690,22 +1910,36 @@ function KPIDashboard() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
-  const [tab, setTab]         = useState('build');
-  const [modal, setModal]     = useState(null);          // issue-list drill-down
-  const [detailModal, setDetailModal] = useState(null);  // tile-detail drill-down
+  const [tab, setTab]              = useState('quality');
+  const [expandedTile, setExpandedTile] = useState(null);  // inline expansion per tile click
+  const [datasetFilter, setDatasetFilter] = useState(null); // dataset_id for the section-level filter
 
+  const [datasets, setDatasets] = useState([]);
+
+  // Reload the dashboard snapshot. When datasetFilter changes the backend
+  // returns aggregate values filtered to that dataset — every Product Quality
+  // tile (Solutions Accuracy, Answer Latency, Index Build) recomputes together
+  // per Kunal's "all three are linked" directive.
   const reload = useCallback(() => {
     setLoading(true);
-    fetch(API_BASE + '/api/dashboard')
+    const qs = datasetFilter ? `?dataset_id=${datasetFilter}` : '';
+    fetch(API_BASE + '/api/dashboard' + qs)
       .then(r => { if (!r.ok) throw new Error('Failed'); return r.json(); })
       .then(d => { setData(d); setLoading(false); setError(null); })
       .catch(e => { setError(e.message); setLoading(false); });
-  }, []);
+  }, [datasetFilter]);
 
   useEffect(() => { reload(); }, [reload]);
 
+  // Load the list of available datasets once at mount.
   useEffect(() => {
-    function onEsc(e) { if (e.key === 'Escape') { setModal(null); setDetailModal(null); } }
+    fetch(API_BASE + '/api/datasets')
+      .then(r => r.ok ? r.json() : [])
+      .then(setDatasets).catch(() => setDatasets([]));
+  }, []);
+
+  useEffect(() => {
+    function onEsc(e) { if (e.key === 'Escape') setExpandedTile(null); }
     document.addEventListener('keydown', onEsc);
     return () => document.removeEventListener('keydown', onEsc);
   }, []);
@@ -1726,66 +1960,30 @@ function KPIDashboard() {
   const sprintProgressPct = Math.round((sprintElapsedDays / sprintDayCount) * 100);
   const fmtDateShort = (iso) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-  const openDetail = (key, tile) => {
-    const recipes = {
-      tts: () => ({ title: 'Time to Solution — per-solution timing', tableName: null,
-        aggregate: [['Avg TTS', `${tile.value} ${tile.unit}`], ['Median', tile.p50_min != null ? `${tile.p50_min} min` : '—'],
-                    ['n solutions', tile.n_solutions], ['Source', tile.source]] }),
-      solutions_accuracy: () => ({ title: 'Solutions Accuracy — portal UI test sessions', tableName: 'portal_ui_test_session',
-        aggregate: [['Current accuracy', `${tile.value}%`], ['Sessions counted', tile.n_sessions], ['Last session', fmtAgo(tile.last_session_at) || '—'], ['Source', tile.source]] }),
-      answer_latency_p95: () => ({ title: 'Answer Latency p95 — production query telemetry', tableName: 'query_latency',
-        aggregate: [['Current p95', `${tile.value} ms`], ['n queries', tile.n_queries.toLocaleString()], ['Last query', fmtAgo(tile.last_query_at) || '—'], ['Source', tile.source]] }),
-      retrieval_latency_p95: () => ({ title: 'Retrieval Latency p95 — benchmark runs', tableName: 'benchmark_retrieval_results',
-        aggregate: [['Current p95', `${tile.value} ms`], ['Datasets', tile.n_datasets ?? '—'], ['Last measured', fmtAgo(tile.last_measured_at) || '—'], ['Source', tile.source]] }),
-      index_build_time: () => ({ title: 'Index Build Time — batch runs', tableName: 'indexing',
-        aggregate: [...Object.entries(tile.by_engine || {}).map(([k, v]) => [k, `${v.value} min/1M`]), ['Last run', fmtAgo(tile.last_run_at) || '—'], ['Source', tile.source]] }),
-      crawling_speed: () => ({ title: 'Crawling — pages per run', tableName: 'crawling',
-        aggregate: [['Avg speed', `${tile.value} ${tile.unit}`], ['Total pages', tile.total_pages?.toLocaleString()], ['Runs', tile.n_runs], ['Source', tile.source]] }),
-      extraction_success: () => ({ title: 'Extraction Pipeline — per-run success', tableName: 'extraction_pipeline',
-        aggregate: [['Avg success rate', `${tile.value}%`], ['Runs', tile.n_runs], ['Avg time', `${tile.avg_time_min} min`], ['Source', tile.source]] }),
-      chunking_volume: () => ({ title: 'Chunking — runs and volume', tableName: 'chunking',
-        aggregate: [['Total chunks', tile.value?.toLocaleString()], ['Avg chunk size', `${tile.avg_chunk_size} tokens`], ['Runs', tile.n_runs], ['Source', tile.source]] }),
-      metadata_accuracy: () => ({ title: 'Metadata Generation — quality per run', tableName: 'metadata_generation',
-        aggregate: [['Avg accuracy', `${tile.value}%`], ['Fields generated', tile.fields_generated?.toLocaleString()], ['Runs', tile.n_runs], ['Source', tile.source]] }),
-      rag_throughput: () => ({ title: 'RAG Pipeline — throughput and accuracy', tableName: 'rag_pipeline',
-        aggregate: [['Avg throughput', `${tile.value} ${tile.unit}`], ['Queries served', tile.total_queries?.toLocaleString()], ['Runs', tile.n_runs], ['Source', tile.source]] }),
-      data_ingested: () => ({ title: 'Data Sources — connected and ingested', tableName: 'data_source',
-        aggregate: [['Total', `${tile.value} ${tile.unit}`], ['Sources', tile.n_sources], ['Last add', fmtAgo(tile.last_added_at) || '—'], ['Source', tile.source]] }),
-      experiment_runs: () => ({ title: 'Experiment Runs — tagged accuracy / latency / index / ingest', tableName: 'experiment_run',
-        aggregate: [['Total runs', tile.value], ['Accuracy', tile.accuracy_runs], ['Latency', tile.latency_runs], ['Ingest', tile.ingest_runs], ['Index', tile.index_runs], ['Source', tile.source]] }),
-      website_ui_pass: () => ({ title: 'Website UI Tests — Playwright sessions', tableName: 'website_ui_test_run',
-        aggregate: [['Pass rate', `${tile.value}%`], ['Sessions', tile.n_sessions], ['Last run', fmtAgo(tile.last_run_at) || '—'], ['Source', tile.source]] }),
-    };
-    const recipe = recipes[key];
-    if (recipe) setDetailModal(recipe());
-  };
-
-  const PH_TILE = (key, tile, label, opts = {}) => {
-    if (!tile) return null;
-    return (
-      <Tile
-        label={label}
-        value={tile.value}
-        unit={tile.unit ?? opts.unit}
-        decimals={opts.decimals ?? 1}
-        sub={opts.sub}
-        meta={opts.lastAt && tile[opts.lastAt] && `last ${fmtAgo(tile[opts.lastAt])}`}
-        isStale={tile.is_stale}
-        isUnavailable={!tile.available}
-        blocker={tile.note}
-        onClick={() => openDetail(key, tile)}
-      />
-    );
+  // Summary stats for the "Answer Accuracy Δ vs HF" tile — average delta
+  // across datasets and how many we lead on. Falls back gracefully when the
+  // backend hasn't populated rag_accuracy_delta yet.
+  const ragRows = pq.rag_accuracy_delta?.rows || [];
+  const ragSummary = {
+    delta_avg: ragRows.length > 0
+      ? +(ragRows.reduce((s, r) => s + (r.delta_pct || 0), 0) / ragRows.length).toFixed(1)
+      : null,
+    n_wins: ragRows.filter(r => (r.delta_pct || 0) >= 0).length,
+    n_datasets: ragRows.length,
+    delta_vs_prev: pq.rag_accuracy_delta?.delta_vs_prev_sprint,
   };
 
   return (
     <div>
       <div className="dash-tabs">
-        <div className={'dash-tab' + (tab === 'build' ? ' active' : '')} onClick={() => setTab('build')}>
-          <span className="dash-tab-icon">⚙</span>Build KPIs
+        <div className={'dash-tab' + (tab === 'quality' ? ' active' : '')} onClick={() => setTab('quality')}>
+          Product Quality
+        </div>
+        <div className={'dash-tab' + (tab === 'velocity' ? ' active' : '')} onClick={() => setTab('velocity')}>
+          Build Velocity
         </div>
         <div className={'dash-tab' + (tab === 'gtm' ? ' active' : '')} onClick={() => setTab('gtm')}>
-          <span className="dash-tab-icon">🎯</span>GTM KPIs
+          GTM KPIs
         </div>
       </div>
 
@@ -1811,7 +2009,7 @@ function KPIDashboard() {
       </div>
 
       <div className="kpi-page">
-        {tab === 'build' && (
+        {tab === 'quality' && (
           <>
             <Section num="01" title="North Star">
               <div className="tile-grid">
@@ -1824,22 +2022,44 @@ function KPIDashboard() {
                   direction={build.north_star.tts.direction}
                   prevSprint={build.north_star.tts.prev_sprint}
                   sub={build.north_star.tts.definition}
-                  breakdown={build.north_star.tts.components}
-                  meta={build.north_star.tts.last_first_query_at && `last query ${fmtAgo(build.north_star.tts.last_first_query_at)}`}
+                  meta={[
+                    build.north_star.tts.median_hours != null && `median ${build.north_star.tts.median_hours}h`,
+                    build.north_star.tts.n_solutions != null && `${build.north_star.tts.n_solutions} solutions`,
+                    build.north_star.tts.last_solution_at && `last ${fmtAgo(build.north_star.tts.last_solution_at)}`,
+                  ].filter(Boolean).join(' · ')}
                   isStale={build.north_star.tts.is_stale}
                   isUnavailable={!build.north_star.tts.available}
                   blocker={build.north_star.tts.note}
                   large
-                  onClick={() => openDetail('tts', build.north_star.tts)}
+                  onClick={() => setExpandedTile(expandedTile === 'tts' ? null : 'tts')}
                 />
               </div>
+              {expandedTile === 'tts' && (
+                <InlineDetail tile={build.north_star.tts} tableName={null}
+                              title="Time to Solution — per-solution timing"
+                              onClose={() => setExpandedTile(null)} />
+              )}
             </Section>
 
-            <Section num="02" title="Product Quality" hint="Click any tile for underlying rows">
-              <div className="quality-subhead">Answer quality & latency</div>
+            <Section num="02" title="Product Quality" hint="Filter to slice all metrics together">
+              <DatasetFilter datasetId={datasetFilter} datasets={datasets}
+                              onChange={setDatasetFilter} loading={loading} />
               <div className="tile-grid">
                 <Tile
-                  label="Solutions Accuracy (avg)"
+                  label="Answer Accuracy Δ vs HF"
+                  value={ragSummary.delta_avg}
+                  unit="pp"
+                  target={0}
+                  delta={ragSummary.delta_vs_prev}
+                  direction="higher_is_better"
+                  sub={`${ragSummary.n_wins} of ${ragSummary.n_datasets} datasets ahead of best frontier LLM`}
+                  meta={pq.rag_accuracy_delta.source}
+                  isUnavailable={!pq.rag_accuracy_delta.available}
+                  blocker={pq.rag_accuracy_delta.note}
+                  onClick={() => setExpandedTile(expandedTile === 'rag_delta' ? null : 'rag_delta')}
+                />
+                <Tile
+                  label="Answer Accuracy on Solutions"
                   value={pq.solutions_accuracy.value}
                   unit="%"
                   target={pq.solutions_accuracy.target}
@@ -1850,7 +2070,7 @@ function KPIDashboard() {
                   isStale={pq.solutions_accuracy.is_stale}
                   isUnavailable={!pq.solutions_accuracy.available}
                   blocker={pq.solutions_accuracy.note}
-                  onClick={() => openDetail('solutions_accuracy', pq.solutions_accuracy)}
+                  onClick={() => setExpandedTile(expandedTile === 'solutions_accuracy' ? null : 'solutions_accuracy')}
                 />
                 <Tile
                   label="Answer Latency p95"
@@ -1865,21 +2085,7 @@ function KPIDashboard() {
                   isStale={pq.answer_latency_p95.is_stale}
                   isUnavailable={!pq.answer_latency_p95.available}
                   blocker={pq.answer_latency_p95.note}
-                  onClick={() => openDetail('answer_latency_p95', pq.answer_latency_p95)}
-                />
-                <Tile
-                  label="Retrieval Latency p95"
-                  value={pq.retrieval_latency_p95.value}
-                  unit="ms"
-                  target={pq.retrieval_latency_p95.target}
-                  delta={pq.retrieval_latency_p95.delta_vs_prev}
-                  direction={pq.retrieval_latency_p95.direction}
-                  sub={pq.retrieval_latency_p95.n_datasets != null ? `Qdrant dense · ${pq.retrieval_latency_p95.n_datasets} datasets` : null}
-                  meta={pq.retrieval_latency_p95.last_measured_at && `last ${fmtAgo(pq.retrieval_latency_p95.last_measured_at)}`}
-                  isStale={pq.retrieval_latency_p95.is_stale}
-                  isUnavailable={!pq.retrieval_latency_p95.available}
-                  blocker={pq.retrieval_latency_p95.note}
-                  onClick={() => openDetail('retrieval_latency_p95', pq.retrieval_latency_p95)}
+                  onClick={() => setExpandedTile(expandedTile === 'answer_latency_p95' ? null : 'answer_latency_p95')}
                 />
                 <Tile
                   label="Index Build Time"
@@ -1893,44 +2099,87 @@ function KPIDashboard() {
                   isStale={pq.index_build_time.is_stale}
                   isUnavailable={!pq.index_build_time.available}
                   blocker={pq.index_build_time.note}
-                  onClick={() => openDetail('index_build_time', pq.index_build_time)}
+                  onClick={() => setExpandedTile(expandedTile === 'index_build_time' ? null : 'index_build_time')}
                 />
               </div>
 
+              {expandedTile === 'rag_delta' && (
+                <div className="inline-detail">
+                  <div className="inline-detail-head">
+                    <span className="inline-detail-title">RAG Accuracy Δ vs HF Leaderboard — per-dataset</span>
+                    <button className="inline-detail-close" onClick={() => setExpandedTile(null)}>✕</button>
+                  </div>
+                  <table className="kpi-delta-table">
+                    <thead><tr>
+                      <th>Dataset</th><th>Kurious</th><th>Best Frontier LLM</th><th>Δ</th>
+                    </tr></thead>
+                    <tbody>
+                      {pq.rag_accuracy_delta.rows.map(row => (
+                        <tr key={row.dataset}>
+                          <td>{row.dataset}</td>
+                          <td>{row.kurious_pct.toFixed(1)}%</td>
+                          <td>{row.best_llm_pct.toFixed(1)}%</td>
+                          <td className={row.delta_pct >= 0 ? 'delta-pos' : 'delta-neg'}>
+                            {row.delta_pct >= 0 ? '+' : ''}{row.delta_pct.toFixed(1)}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="kpi-source-note">
+                    {pq.rag_accuracy_delta.source} · {pq.rag_accuracy_delta.note}
+                  </div>
+                </div>
+              )}
+              {expandedTile === 'solutions_accuracy' && (
+                <InlineDetail tile={pq.solutions_accuracy} tableName="portal_ui_test_session"
+                              title="Solutions Accuracy — portal UI test sessions"
+                              datasetId={datasetFilter}
+                              onClose={() => setExpandedTile(null)} />
+              )}
+              {expandedTile === 'answer_latency_p95' && (
+                <InlineDetail tile={pq.answer_latency_p95} tableName="query_latency"
+                              title="Answer Latency p95 — production query telemetry"
+                              datasetId={datasetFilter}
+                              onClose={() => setExpandedTile(null)} />
+              )}
+              {expandedTile === 'index_build_time' && (
+                <InlineDetail tile={pq.index_build_time} tableName="indexing"
+                              title="Index Build Time — batch runs"
+                              datasetId={datasetFilter}
+                              onClose={() => setExpandedTile(null)} />
+              )}
+
               {Object.keys(ph).length > 0 && (<>
-                <div className="quality-subhead" style={{marginTop: 22}}>Pipeline health · end-to-end stages</div>
-                <PipelineFlow ph={ph} openDetail={openDetail} />
+                <div className="quality-subhead" style={{marginTop: 28}}>Pipeline health · end-to-end stages</div>
+                <PipelineFlow ph={ph} onSelect={(key, tile) => setExpandedTile(expandedTile === ('ph:'+key) ? null : ('ph:'+key))} />
+                {expandedTile && expandedTile.startsWith('ph:') && (() => {
+                  const k = expandedTile.slice(3);
+                  const tile = ph[k];
+                  const tableForStage = {
+                    crawling_speed: 'crawling', extraction_success: 'extraction_pipeline',
+                    chunking_volume: 'chunking', metadata_accuracy: 'metadata_generation',
+                    rag_throughput: 'rag_pipeline', data_ingested: 'data_source',
+                    experiment_runs: 'experiment_run', website_ui_pass: 'website_ui_test_run',
+                  }[k];
+                  return <InlineDetail tile={tile} tableName={tableForStage}
+                                       title={`Pipeline stage · ${tile.stage || k}`}
+                                       datasetId={datasetFilter}
+                                       onClose={() => setExpandedTile(null)} />;
+                })()}
               </>)}
-
-              <div className="quality-subhead" style={{marginTop: 22}}>RAG Accuracy Delta vs HF Leaderboard <span className="delta-meta">— vs best frontier LLM, no-RAG baseline</span></div>
-              <table className="kpi-delta-table">
-                <thead><tr>
-                  <th>Dataset</th><th>Kurious</th><th>Best Frontier LLM</th><th>Delta</th>
-                </tr></thead>
-                <tbody>
-                  {pq.rag_accuracy_delta.rows.map(row => (
-                    <tr key={row.dataset}>
-                      <td>{row.dataset}</td>
-                      <td>{row.kurious_pct.toFixed(1)}%</td>
-                      <td>{row.best_llm_pct.toFixed(1)}%</td>
-                      <td className={row.delta_pct >= 0 ? 'delta-pos' : 'delta-neg'}>
-                        {row.delta_pct >= 0 ? '+' : ''}{row.delta_pct.toFixed(1)}%
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="kpi-source-note">
-                {pq.rag_accuracy_delta.source} · {pq.rag_accuracy_delta.note}
-              </div>
             </Section>
+          </>
+        )}
 
-            <Section num="03" title="Build Velocity"
+        {tab === 'velocity' && (
+          <>
+            <Section num="01" title="Build Velocity"
                      link={velocity.source ? `https://${velocity.source}/issues?q=is:issue+updated:>=${sprint.start_iso.slice(0,10)}` : null}
                      linkLabel="GitHub issues"
                      hint={`${fmtDateShort(sprint.start_iso)} → ${fmtDateShort(sprint.end_iso)} · resets every Friday 9pm PT`}>
               {!velocity.available && <div className="tile-blocker" style={{borderTop: 'none', marginTop: 0, padding: 0}}>{velocity.note}</div>}
-              {velocity.available && (
+              {velocity.available && (<>
                 <div className="tile-grid">
                   <Tile
                     label="Engineering Completion"
@@ -1939,7 +2188,7 @@ function KPIDashboard() {
                     sub={`${velocity.engineering.done} done · ${velocity.engineering.open} open · ${velocity.engineering.total} total`}
                     meta="sprint"
                     sourceHref={`https://${velocity.source}/issues?q=is:issue+label:engineering+is:closed+closed:>=${sprint.start_iso.slice(0,10)}`}
-                    onClick={() => setModal({title: 'Engineering — Sprint issues', slice: 'engineering'})}
+                    onClick={() => setExpandedTile(expandedTile === 'v:engineering' ? null : 'v:engineering')}
                   />
                   <Tile
                     label="Product / GTM Completion"
@@ -1948,7 +2197,7 @@ function KPIDashboard() {
                     sub={`${velocity.product_gtm.done} done · ${velocity.product_gtm.open} open · ${velocity.product_gtm.total} total`}
                     meta="sprint"
                     sourceHref={`https://${velocity.source}/issues?q=is:issue+label:product+is:closed+closed:>=${sprint.start_iso.slice(0,10)}`}
-                    onClick={() => setModal({title: 'Product & GTM — Sprint issues', slice: 'product_gtm'})}
+                    onClick={() => setExpandedTile(expandedTile === 'v:product_gtm' ? null : 'v:product_gtm')}
                   />
                   <Tile
                     label="Bugs Open"
@@ -1957,7 +2206,7 @@ function KPIDashboard() {
                     sub={`${velocity.bugs.fixed_this_sprint} fixed this sprint`}
                     meta="across all severities"
                     sourceHref={`https://${velocity.source}/issues?q=is:issue+is:open+label:bug`}
-                    onClick={() => setModal({title: 'Open bugs', slice: 'bugs_open'})}
+                    onClick={() => setExpandedTile(expandedTile === 'v:bugs_open' ? null : 'v:bugs_open')}
                   />
                   <Tile
                     label="Avg Time to Fix Bugs"
@@ -1968,18 +2217,22 @@ function KPIDashboard() {
                     isUnavailable={velocity.bugs.avg_time_to_fix_hours == null}
                     blocker="No bugs closed within current sprint window"
                     sourceHref={`https://${velocity.source}/issues?q=is:issue+label:bug+is:closed+closed:>=${sprint.start_iso.slice(0,10)}`}
-                    onClick={() => setModal({title: 'Bugs fixed this sprint', slice: 'bugs_fixed'})}
+                    onClick={() => setExpandedTile(expandedTile === 'v:bugs_fixed' ? null : 'v:bugs_fixed')}
                   />
                 </div>
-              )}
+                {expandedTile && expandedTile.startsWith('v:') && (
+                  <IssueListInline slice={expandedTile.slice(2)}
+                                   onClose={() => setExpandedTile(null)} />
+                )}
+              </>)}
             </Section>
 
-            <Section num="04" title="Product Readiness"
+            <Section num="02" title="Product Readiness"
                      link={readiness.source ? `https://${readiness.source}/issues?q=is:issue+is:closed+closed:>=${sprint.start_iso.slice(0,10)}` : null}
                      linkLabel="Publications repo"
-                     hint="Closed this sprint · click for the issue list">
+                     hint="Closed this sprint">
               {!readiness.available && <div className="tile-blocker" style={{borderTop: 'none', marginTop: 0, padding: 0}}>{readiness.note}</div>}
-              {readiness.available && (
+              {readiness.available && (<>
                 <div className="tile-grid">
                   <Tile
                     label="Paper Publications"
@@ -1988,7 +2241,7 @@ function KPIDashboard() {
                     sub="Closed this sprint"
                     meta="aintropy-ai/publications"
                     sourceHref={`https://${readiness.source}/issues?q=is:issue+is:closed+-label:collateral+closed:>=${sprint.start_iso.slice(0,10)}`}
-                    onClick={() => setModal({title: 'Paper Publications — Sprint', slice: 'papers'})}
+                    onClick={() => setExpandedTile(expandedTile === 'v:papers' ? null : 'v:papers')}
                   />
                   <Tile
                     label="Collaterals"
@@ -1997,10 +2250,12 @@ function KPIDashboard() {
                     sub="Closed this sprint"
                     meta="label: collateral"
                     sourceHref={`https://${readiness.source}/issues?q=is:issue+is:closed+label:collateral+closed:>=${sprint.start_iso.slice(0,10)}`}
-                    onClick={() => setModal({title: 'Collaterals — Sprint', slice: 'collaterals'})}
+                    onClick={() => setExpandedTile(expandedTile === 'v:collaterals' ? null : 'v:collaterals')}
                   />
                 </div>
-              )}
+                {expandedTile === 'v:papers' && <IssueListInline slice="papers" onClose={() => setExpandedTile(null)} />}
+                {expandedTile === 'v:collaterals' && <IssueListInline slice="collaterals" onClose={() => setExpandedTile(null)} />}
+              </>)}
             </Section>
           </>
         )}
@@ -2058,8 +2313,7 @@ function KPIDashboard() {
         )}
       </div>
 
-      {modal && <IssueListModal title={modal.title} slice={modal.slice} onClose={() => setModal(null)} />}
-      {detailModal && <TileDetailModal title={detailModal.title} tableName={detailModal.tableName} aggregate={detailModal.aggregate} onClose={() => setDetailModal(null)} />}
+      {/* All drill-down is inline now per Kunal's directive — no modals */}
     </div>
   );
 }
